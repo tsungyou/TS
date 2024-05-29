@@ -1,0 +1,16 @@
+1. 不挑股票，隨機選100支（偷懶）
+
+2. resample => Month
+
+3. rolling, 用當下過去一年資料做model.fit, autoregression參數用pacf最大值當參考
+
+4. 出來的下一期預測 pct_change 直接當因子用，沒有特別選top10,直接買所有下一期預期pct_change > 0 的股票
+(v2: top10, undone)
+
+Problems:
+1. MDD
+2. Sharpe
+3. 股池
+
+ARIMA v1: 月轉倉, 全部resmaple成monthly, long only
+ARIMA v2: 必須以日為原則產生因子, 把成交量和價格組合成stationary的參考.
