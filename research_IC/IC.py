@@ -47,6 +47,7 @@ class Database(MethematicFunctions, AlphaLens):
         return df
     
     # from factor to all
+    # weekly factor, for that factor generation process takes soo long
     def get_corresponding_weighting(self, factor):
         if isinstance(factor.index[0], str):
             factor.index = pd.to_datetime(factor.index)
