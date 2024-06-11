@@ -3,7 +3,7 @@ from numpy import cos, sin
 import numpy as np
 import pandas as pd
 
-class AlphaFunctions(object):
+class MethematicFunctions(object):
     def __init__(self):
         pass
 

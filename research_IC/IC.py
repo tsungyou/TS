@@ -1,15 +1,16 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.stats as st
-from mathematics import AlphaFunctions
+from mathematics import MethematicFunctions
+from alphalens import AlphaLens
 # import abc
-class Database(AlphaFunctions):
+class Database(MethematicFunctions, AlphaLens):
 
     __slots__ = ("fft", "arima", "icir", "_close")
 
     def __init__(self):
         super().__init__()
-        self._close = pd.read_parquet("Adj_close.parquet")
+        self._close = pd.read_parquet("../db/tw/Adj_close.parquet")
     
     @property
     def close(self):
@@ -38,5 +39,16 @@ class Database(AlphaFunctions):
         plt.plot(adj_close.loc[pd.to_datetime('2020-01-01'):]['1234.TW'])
         plt.title("1234.TW, 2020")
         plt.show()
-
+        return None
+    
+    # factor processing methods
+    def median_average_deviation(self, factor):
+        df = factor
+        return df
+    
+    # from factor to all
+    def get_corresponding_weighting(self, factor):
+        if isinstance(factor.index[0], str):
+            factor.index = pd.to_datetime(factor.index)
+        pass
 a = Database()
