@@ -1,0 +1,3 @@
+ARIMA_freqW_factors_20d_bestlag_first100: random 100, since 2010-07-04;
+
+FFT_freqW_rand100_2020.csv: rand 100, since 2020;
