@@ -120,6 +120,7 @@ class TimeSeries(FactorPlotting):
     def sarima(self):
         pass
 
-a = TimeSeries()
-a.arma()
-a.garch()
+if __name__ == "__main__":
+    a = TimeSeries()
+    a.arma()
+    a.garch()
