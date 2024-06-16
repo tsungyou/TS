@@ -21,3 +21,5 @@ TimeSeries.py
 # current: arima garch in replace of Kalman
 cd factor/finished/ARIMA_v1_resmaple.ipynb
 ```
+
+除此之外都是沒用的東東
