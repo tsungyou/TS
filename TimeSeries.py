@@ -16,7 +16,7 @@ import warnings
 
 class TimeSeries(FactorPlotting):
     def __init__(self):
-        __slots__ = ("pct_change_open", "pct_change_close")
+        __slots__ = ("pct_change_open", "pct_change_close", "train_interval")
         super().__init__()
         ### create data main for two recession than others, set data for 2019-01-01 ~ 2023
         self.pct_change_close = self.close.pct_change(fill_method=None)
@@ -24,10 +24,11 @@ class TimeSeries(FactorPlotting):
         self.pct_change_close.index = pd.to_datetime(self.pct_change_close.index)
         self.pct_change_open.index = pd.to_datetime(self.pct_change_open.index)
         # 用在隔天開盤/收盤
-        self.pct_change_close = self.pct_change_close.loc[pd.to_datetime('2019-01-01'):pd.to_datetime('2024-01-01')]
+        self.pct_change_close = self.pct_change_close.loc[pd.to_datetime('2015-01-01'):pd.to_datetime('2024-01-01')]
         # 可以用在當天收盤/隔天開盤/隔天收盤
-        self.pct_change_open = self.pct_change_open.loc[pd.to_datetime('2019-01-01'):pd.to_datetime('2024-01-01')]
-    
+        self.pct_change_open = self.pct_change_open.loc[pd.to_datetime('2015-01-01'):pd.to_datetime('2024-01-01')]
+
+        self.train_interval = 200
     # default: resample("W")
     def arma(self, ma=0, i=0):
         pct_change_close = self.pct_change_close
@@ -35,7 +36,7 @@ class TimeSeries(FactorPlotting):
         indexes = pct_change_close_w.index
         tickers = pct_change_close_w.columns[:100]
         factors = []
-        indices = indexes[52:]
+        indices = indexes[self.train_interval:]
         start = time.time()
         for index, date in enumerate(indices):
             pct_train = pct_change_close_w.loc[indexes[index]:date]
@@ -46,45 +47,41 @@ class TimeSeries(FactorPlotting):
                 if series.isna().any():
                     prediction = 0
                     print(ticker, "failed at", date)
-                else:
+                    continue
                     ###### ARIMA ma
-                    if ma == 1:
-                        ma_value = acf(series)
-                        N = len(ma_value)
-                        threshold = 1.96/np.sqrt(N)
-                        significant_indices = np.where(np.abs(ma_value) > threshold)[0]
-                        if len(significant_indices) >= 2:
-                            ma_t = significant_indices[1]
-                        elif len(significant_indices) == 1:
-                            ma_t = np.argmax(np.abs(ma_value[1:])) + 1
-                    else:
-                        ma_t = 0
-                    ###### 
-                    pacf_values = pacf(series, method="ywm")
-                    N = len(pacf_values)
+                if ma == 1:
+                    ma_value = acf(series)
+                    N = len(ma_value)
                     threshold = 1.96/np.sqrt(N)
-                    significant_indices = np.where(np.abs(pacf_values) > threshold)[0]
+                    significant_indices = np.where(np.abs(ma_value) > threshold)[0]
                     if len(significant_indices) >= 2:
-                        best_lag_n = significant_indices[1]
+                        ma_t = significant_indices[1]
                     elif len(significant_indices) == 1:
-                        best_lag_n = np.argmax(np.abs(pacf_values[1:])) + 1
-                    model = sm.tsa.arima.ARIMA(series, order=(best_lag_n, 0, ma_t)) # order = (ar_t, i_t, ma_t), for ar model only => ma_t = 0
-                    model_fit = model.fit()
-                    prediction = model_fit.forecast()
-                    prediction_factor.append(prediction.iloc[0])
+                        ma_t = np.argmax(np.abs(ma_value[1:])) + 1
+                else:
+                    ma_t = 0
+                ###### 
+                ma_value = pacf(series)
+                array_acf_best3 = np.argsort(abs(ma_value))[-4:-1][::-1] # is log
+                models = [sm.tsa.arima.ARIMA(series, order=(i, 0, 0)) for i in array_acf_best3]# order = (ar_t, i_t, ma_t), for ar model only => ma_t = 0
+                model_fits = [model.fit() for model in models]
+                model_aics = [model_fit.aic for model_fit in model_fits]
+                prediction = model_fits[np.argmin(model_aics)].forecast().iloc[0]
+                prediction_factor.append(prediction)
             factors.append(prediction_factor)
         outcome = pd.DataFrame(factors, columns=tickers, index=indices)
-        outcome.to_parquet(f"factor/data/AR_MA{ma}_2019_2023.parquet")
+        outcome.to_parquet(f"factor/data/AR_MA{ma}_2019_2023_F100.parquet")
         print(time.time() - start)
         return outcome
 
+    # garch target on pct_change not residuals
     def garch(self):
         pct_change_close = self.pct_change_close
         pct_change_close_w = pct_change_close.resample("W").sum().fillna(0)
         indexes = pct_change_close_w.index
         tickers = pct_change_close_w.columns[:100]
         factors = []
-        indices = indexes[52:]
+        indices = indexes[self.train_interval:]
         start = time.time()
         for index, date in enumerate(indices):
             pct_train = pct_change_close_w.loc[indexes[index]:date]
@@ -124,4 +121,5 @@ class TimeSeries(FactorPlotting):
         pass
 
 a = TimeSeries()
+a.arma()
 a.garch()
