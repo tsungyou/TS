@@ -10,9 +10,17 @@ from FactorPlotting import FactorPlotting
 
 import warnings
 # warnings.filterwarnings("ignore")
+
+'''
+/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/statsmodels/tsa/base/tsa_model.py:473: ValueWarning: A date index has been provided, but it has no associated frequency information and so will be ignored when e.g. forecasting.
+  self._init_dates(dates, freq)
+=> wouldn't influence the outcome
+=======================================
+
 # MLE optimization not converge for ar model
 # /Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/statsmodels/regression/linear_model.py:1491: ValueWarning: Matrix is singular. Using pinv.
 #   warnings.warn("Matrix is singular. Using pinv.", ValueWarning)
+'''
 
 class TimeSeries(FactorPlotting):
     def __init__(self):
@@ -60,13 +68,15 @@ class TimeSeries(FactorPlotting):
                         ma_t = np.argmax(np.abs(ma_value[1:])) + 1
                 else:
                     ma_t = 0
-                ###### 
-                ma_value = pacf(series)
-                array_acf_best3 = np.argsort(abs(ma_value))[-4:-1][::-1] # is log
-                models = [sm.tsa.arima.ARIMA(series, order=(i, 0, 0)) for i in array_acf_best3]# order = (ar_t, i_t, ma_t), for ar model only => ma_t = 0
-                model_fits = [model.fit() for model in models]
-                model_aics = [model_fit.aic for model_fit in model_fits]
-                prediction = model_fits[np.argmin(model_aics)].forecast().iloc[0]
+                ###### _return_best_lag
+                # ma_value = pacf(series)
+                # array_acf_best3 = np.argsort(abs(ma_value))[-4:-1][::-1] # is log
+                # models = [sm.tsa.arima.ARIMA(series, order=(i, 0, 0)) for i in array_acf_best3]# order = (ar_t, i_t, ma_t), for ar model only => ma_t = 0
+                # model_fits = [model.fit() for model in models]
+                # model_aics = [model_fit.aic for model_fit in model_fits]
+                # prediction = model_fits[np.argmin(model_aics)].forecast().iloc[0]
+                # prediction_factor.append(prediction)
+                prediction = self._arima_forecast_1(series=series)
                 prediction_factor.append(prediction)
             factors.append(prediction_factor)
         outcome = pd.DataFrame(factors, columns=tickers, index=indices)
@@ -74,8 +84,17 @@ class TimeSeries(FactorPlotting):
         print(time.time() - start)
         return outcome
 
+    def _arima_forecast_1(self, series: pd.Series) -> float:
+        ar_value = pacf(series)
+        array_acf_best3 = np.argsort(abs(ar_value))[-4:-1][::-1] # is log
+        models = [sm.tsa.arima.ARIMA(series, order=(i, 0, 0)) for i in array_acf_best3]# order = (ar_t, i_t, ma_t), for ar model only => ma_t = 0
+        model_fits = [model.fit() for model in models]
+        model_aics = [model_fit.aic for model_fit in model_fits]
+        prediction = model_fits[np.argmin(model_aics)].forecast().iloc[0]
+        return prediction
     # garch target on pct_change not residuals
-    def garch(self):
+
+    def garch(self) -> pd.DataFrame:
         pct_change_close = self.pct_change_close
         pct_change_close_w = pct_change_close.resample("W").sum().fillna(0)
         indexes = pct_change_close_w.index
@@ -110,11 +129,20 @@ class TimeSeries(FactorPlotting):
         outcome.to_parquet(f"factor/data/GARCH_close_2019_2023_F100.parquet")
         print("time spent:", time.time() - start)
         return outcome
-    
+    '''
     # auto regressive conditional heteroskedasticity/heteroscedasticity
     # from real values - predicted values plotting
+    # test on TWSE Index should be enough for step 1
+    # obstacle to be "expanding to multidimension prediction problem"
+    # how to consider volume as an influencer
+    '''
     def arima_grach(self):
-        pass
+        train = self.pct_change_close['2330.TW'].iloc[-1000:-300]
+        test = self.pct_change_close['2330.TW'].iloc[-300:]
+        df = pacf(train)
+        print(df)
+        print(train.tail())
+        print(test.head())
     def fft(self):
         pass
     def sarima(self):
@@ -122,5 +150,6 @@ class TimeSeries(FactorPlotting):
 
 if __name__ == "__main__":
     a = TimeSeries()
-    a.arma()
-    a.garch()
+    # a.arma()
+    # a.garch()
+    a.arima_grach()
