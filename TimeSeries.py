@@ -9,7 +9,7 @@ from arch import arch_model
 from FactorPlotting import FactorPlotting
 
 import warnings
-# warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore")
 
 '''
 /Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/statsmodels/tsa/base/tsa_model.py:473: ValueWarning: A date index has been provided, but it has no associated frequency information and so will be ignored when e.g. forecasting.
@@ -136,13 +136,19 @@ class TimeSeries(FactorPlotting):
     # obstacle to be "expanding to multidimension prediction problem"
     # how to consider volume as an influencer
     '''
-    def arima_grach(self):
-        train = self.pct_change_close['2330.TW'].iloc[-1000:-300]
-        test = self.pct_change_close['2330.TW'].iloc[-300:]
-        df = pacf(train)
-        print(df)
-        print(train.tail())
-        print(test.head())
+    def arima_garch(self):
+        test_range = -250
+        pct_change_close = self.pct_change_close
+        test = pct_change_close['2330.TW'].iloc[-test_range:]
+        predictions = [0.0] * 100
+        for index in range(100):
+            print(index)
+            train_data = pct_change_close['2330.TW'].iloc[-test_range+index:-test_range+100+index]
+            prediction = self._arima_forecast_1(train_data)
+            predictions[index] = prediction
+        
+        print("test finished")
+        return predictions, test
     def fft(self):
         pass
     def sarima(self):
@@ -152,4 +158,4 @@ if __name__ == "__main__":
     a = TimeSeries()
     # a.arma()
     # a.garch()
-    a.arima_grach()
+    a.arima_garch()
