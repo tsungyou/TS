@@ -13,32 +13,27 @@ class Crontab(DatabaseFunctions):
     __slots__ = ("tw_symbol_4", "tw_symbol_5", "tw_symbol_6")
 
     
-    def __init__(self, update=False):
+    def __init__(self):
         super().__init__()
-        self.update = update
-        print(self.update)
         self.tw_symbol_4 = None
         self.tw_symbol_5 = None
         self.tw_symbol_6 = None
         # if update == False:
-        #     self.get_tw_symbol_update()
+        self.get_tw_symbol_update()
         with open("tw/symbol/symbol_4.json") as f:
             self.tw_symbol_4 = json.load(f)
         with open("tw/symbol/symbol_5.json") as f:
             self.tw_symbol_5 = json.load(f)
         with open("tw/symbol/symbol_6.json") as f:
-            self.tw_symbol_6 = json.load(f)        
+            self.tw_symbol_6 = json.load(f)
 
-        if self.update:
-            print("update")
-        else:
-            for year in range(2024, 2023, -1):
-                self.database_init_tw(year=year)
-                self.database_init_tw_pbratio(year=year)
+        for year in range(2024, 2023, -1):
+            print("start database init tw...")
+            self.database_init_tw(year=year)
+            print("start database pbratio init tw...")
+            self.database_init_tw_pbratio(year=year)
             # self.get_TWSE_price_init()
-        # test
-        # list_ = self.get_tw_price_update("6446", 2023)
-        # print(list_)
+        
     def get_tw_symbol_update(self):
         url_histock_stock_list = "https://histock.tw/stock/rank.aspx?p=all"
         response = requests.get(url_histock_stock_list)
@@ -156,4 +151,4 @@ class Crontab(DatabaseFunctions):
         df_final = pd.concat(list_concat)
         return df_final
 if __name__ == "__main__":
-    a = Crontab(update=False)
+    a = Crontab()
