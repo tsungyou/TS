@@ -76,7 +76,7 @@ class TimeSeries(FactorPlotting):
                 # model_aics = [model_fit.aic for model_fit in model_fits]
                 # prediction = model_fits[np.argmin(model_aics)].forecast().iloc[0]
                 # prediction_factor.append(prediction)
-                prediction = self._arima_forecast_1(series=series)
+                prediction = self._arima_forecast_1(series=series, ma_t=ma_t)
                 prediction_factor.append(prediction)
             factors.append(prediction_factor)
         outcome = pd.DataFrame(factors, columns=tickers, index=indices)
@@ -84,10 +84,10 @@ class TimeSeries(FactorPlotting):
         print(time.time() - start)
         return outcome
 
-    def _arima_forecast_1(self, series: pd.Series) -> float:
+    def _arima_forecast_1(self, series: pd.Series, ma_t: int) -> float:
         ar_value = pacf(series)
         array_acf_best3 = np.argsort(abs(ar_value))[-4:-1][::-1] # is log
-        models = [sm.tsa.arima.ARIMA(series, order=(i, 0, 0)) for i in array_acf_best3]# order = (ar_t, i_t, ma_t), for ar model only => ma_t = 0
+        models = [sm.tsa.arima.ARIMA(series, order=(ma_t, 0, 0)) for i in array_acf_best3]# order = (ar_t, i_t, ma_t), for ar model only => ma_t = 0
         model_fits = [model.fit() for model in models]
         model_aics = [model_fit.aic for model_fit in model_fits]
         prediction = model_fits[np.argmin(model_aics)].forecast().iloc[0]
