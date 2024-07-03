@@ -1,16 +1,24 @@
-1. 不挑股票，隨機選100支（偷懶）
+resample to W-FRI:
 
-2. resample => Month
+pct_change_close
+2024-01-01 = init
+2024-01-06 = return buying at 2024-01-01 close, selling at 2024-01-06 close
+2024-01-13 = next iter
 
-3. rolling, 用當下過去一年資料做model.fit, autoregression參數用pacf最大值當參考
+signal_close:
+2024-01-01 = init
+2024-01-06 = prediction using data till 2024-01-01 close, only available for
+1. 2024-01-06 open
+2. 2024-01-06 close
+2. 2024-01-13 open
 
-4. 出來的下一期預測 pct_change 直接當因子用，沒有特別選top10,直接買所有下一期預期pct_change > 0 的股票
-(v2: top10, undone)
+pct_change 代表的是前一期收盤買入 當期收盤賣出的損益.
+signal 代表的是該期open/close可以使用
 
-Problems:
-1. MDD
-2. Sharpe
-3. 股池
+所以如果用pct_change算signal, pct_change, weekly:
+pct_change.shift(-1) * signal.shift(0)
 
-ARIMA v1: 月轉倉, 全部resmaple成monthly, long only
-ARIMA v2: 必須以日為原則產生因子, 把成交量和價格組合成stationary的參考.
+pct_close x  signal_open:
+pct_close x signal_close: pct.shift(1) * signal
+pct_open  x  signal_open: 
+pct_open  x signal_close:

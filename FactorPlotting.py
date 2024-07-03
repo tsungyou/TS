@@ -11,9 +11,9 @@ class FactorPlotting(object):
         self.close = None
         self.open = None
         self.volume = None
-        self.close_path = "db/tw/Adj_close.parquet"
-        self.open_path = "db/tw/Open.parquet"
-        self.volume_path = "db/tw/Open.parquet"
+        self.close_path = "db/tw/pdata/close.parquet"
+        self.open_path = "db/tw/pdata/open.parquet"
+        self.volume_path = "db/tw/pdata/volume.parquet"
         self.open = pd.read_parquet(self.open_path)
         self.close = pd.read_parquet(self.close_path)
 
@@ -146,21 +146,3 @@ class FactorPlotting(object):
         print("Karma Ratio:", np.round(karma_ratio, 2))
         print("=====================")
         return -drawdowns
-
-if __name__ == "__main__":
-    a = FactorPlotting()
-    path = 'factor/data/ARIMA_freqM_last100_2020.csv'
-    # a.auto_regression(path)
-    # time_interval = a.time_interval_identifier(path)
-    # print(time_interval)
-    a.backtester(path)
-
-    # weighting_m, pct_m = a.get_basic_weighting(path, shift=-2)
-    # weighting_m_long  = weighting_m[weighting_m > 0].fillna(0) * 2
-    # # =================================================================
-    # weighting_m_long_equal = a.weighting_top10(weighting_m_long, weight_method="equal")
-    # return_series_equal = (weighting_m_long_equal*pct_m).sum(axis=1)
-    # # =================================================================
-    # mdd_series = a.get_return_analysis(returns=return_series_equal)
-    # plt.plot(mdd_series)
-    # plt.show()    
