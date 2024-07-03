@@ -25,10 +25,9 @@ class DatabaseCreation(DatabaseFunctions):
             self.tw_symbol_6 = json.load(f)
 
         print("==========start database init tw...==========")
-        self.database_init_tw(year=2021)
-
         for year in range(2019, 2015, -1):
-            self.database_init_tw(year=year)
+            pass 
+            # self.database_init_tw(year=year)
             # print("start database pbratio init tw...")
             # self.database_init_tw_pbratio(year=year)
             # print("start TWSE price init...")
