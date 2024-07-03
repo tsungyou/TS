@@ -85,22 +85,6 @@ class FactorPlotting(object):
         else:
             return 0
 
-    def get_demean_weighting(self, factor: pd.DataFrame):
-        df1 = factor.dropna(axis='columns', how='all').copy()
-        demean = df1.sub(df1.mean(axis=1), axis=0)
-        weighting = demean.div(demean.abs().sum(axis=1), axis=0)
-        return weighting
-    
-    def weighting_top10(self, weighting: pd.DataFrame, weight_method='equal'):
-        if weight_method == 'equal':
-            new_weighting = weighting.apply(self._top10, axis=1)
-            new_weighting = new_weighting.apply(self._reweighting_equal, axis=1)
-        else:
-            new_weighting = weighting.apply(self._top10, axis=1)
-            new_weighting = new_weighting.apply(self._reweighting_origin, axis=1)
-
-        return new_weighting
-    
     def _top10(self, row):
         top10_indices = row.nlargest(10).index
         new_row = pd.Series(0.0, index=row.index)
