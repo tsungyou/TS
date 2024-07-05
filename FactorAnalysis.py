@@ -29,7 +29,7 @@ class FactorAnalysis(object):
         df = pd.DataFrame(list_weighting)
         df.plot(subplots=False, label=df.columns)
         plt.show()
-    
+        return df
     def get_weightings(self, factor: pd.DataFrame, top):
         df1 = factor.dropna(axis='columns', how='all').copy()
         demean = df1.sub(df1.mean(axis=1), axis=0)

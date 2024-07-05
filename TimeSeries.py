@@ -34,6 +34,7 @@ class TimeSeries(FactorAnalysis):
         indexes = pct_close_w.index
         tickers = pct_close_w.columns[start:ticker_len]
         indices = indexes[self.bt_period_w:]
+        # indices = indexes[-self.bt_period_w-2:]
         forecast = np.zeros((len(indices), len(tickers)))
         for index, date in enumerate(tqdm(indices, desc=f"arma model for top {ticker_len}, enumerate by da")):
             pct_train = pct_close_w.loc[indexes[index]:date]

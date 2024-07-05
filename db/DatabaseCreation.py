@@ -25,9 +25,9 @@ class DatabaseCreation(DatabaseFunctions):
             self.tw_symbol_6 = json.load(f)
 
         print("==========start database init tw...==========")
-        for year in range(2019, 2015, -1):
+        for year in range(2021, 2019, -1):
             pass 
-            # self.database_init_tw(year=year)
+            self.database_init_tw(year=year)
             # print("start database pbratio init tw...")
             # self.database_init_tw_pbratio(year=year)
             # print("start TWSE price init...")
@@ -71,6 +71,7 @@ class DatabaseCreation(DatabaseFunctions):
         for ticker in tqdm(list(list_tw_stock), desc=f"Updating tw stock for {year}"):
             try:
                 list_ = self.get_tw_pbratio(stock_symbol=ticker, year=year)
+                print(list_)
                 df_concat.append(list_)
             except ValueError:
                 print(ticker, year)
@@ -103,6 +104,7 @@ class DatabaseCreation(DatabaseFunctions):
     def get_tw_price(self, stock_symbol = '2330', year=2024):
         list_concat = []
         limit_month = 7 if year == 2024 else 13
+        df_final = pd.DataFrame()
         for i in range(1, limit_month):
             month = f"0{i}" if i < 10 else i
             da = f"{year}{month}01"
@@ -112,17 +114,17 @@ class DatabaseCreation(DatabaseFunctions):
             dicts = response.json()
             try:
                 data = dicts['data']
+
                 data = [[self._data_cleaning_price(i[j]) for j in range(len(data[0]))] for i in data]
                 for sublist in data:
                     sublist.append(stock_symbol)
                 df = pd.DataFrame(data)
                 list_concat.append(df)
-                
-            except KeyError:
-                if i == 1:
-                    return None
+                    
+                df_final = pd.concat(list_concat)
+            except:
+                print(stock_symbol, year)
                 continue
-        df_final = pd.concat(list_concat)
         return df_final
                 
     def get_tw_pbratio(self, stock_symbol='2330', year=2024):
@@ -152,7 +154,7 @@ class DatabaseCreation(DatabaseFunctions):
     # convert all price, pbratio datra to float datatype
     def get_ind_pdata_parquet(self):
         directories = ['tw/pb_ratio', "tw/price"]
-        parquet_files = [os.path.join(directories[1], f) for f in os.listdir(directories[1]) if f.endswith(".parquet")] 
+        parquet_files = [os.path.join(directories[0], f) for f in os.listdir(directories[0]) if f.endswith(".parquet")] 
         dfs = []
 
         for file in parquet_files:

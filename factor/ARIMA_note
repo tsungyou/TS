@@ -22,3 +22,9 @@ pct_close x  signal_open:
 pct_close x signal_close: pct.shift(1) * signal
 pct_open  x  signal_open: 
 pct_open  x signal_close:
+
+Process:
+1. plot basic usage(top10, equal_weighted, long_short...)
+2. check distribution of cumsum at date end for the stock pools 
+3. check quantilized cumsum plot, check if there is any significant diff
+4. check ret of mean of stocks of quantilized class
