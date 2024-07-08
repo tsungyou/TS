@@ -69,34 +69,3 @@ class FactorAnalysis(object):
                 row = row.apply(lambda x: x / count_larger_than_zero if x > 0 else x)
             return row
         return weighting.apply(equal_weight, axis=1)
-    
-    # get analysis given weighting
-    # def get_return_analysis(self, returns: pd.Series):
-    #     '''
-    #     returns: cunsum()/ cumprod()
-    #     '''
-    #     risk_free_rate = 0.03
-    #     year_total = 4
-    #     returns_cumsum = returns
-    #     # sharpe
-    #     sharpe = (np.mean(returns_cumsum.iloc[-1] - risk_free_rate)/ np.std(returns_cumsum))**(1/year_total)
-    #     # karma
-    #     positive_returns = returns[returns > 0]
-    #     negative_returns = returns[returns < 0]
-    #     if len(negative_returns) == 0:
-    #         karma_ratio = np.mean(positive_returns) / 0.00001  # Avoid division by zero
-    #     else:
-    #         karma_ratio = np.mean(positive_returns) / np.abs(np.mean(negative_returns))
-    #     # mdd
-    #     rolling_max = returns_cumsum.cummax()
-    #     drawdowns = (returns_cumsum - rolling_max) / rolling_max
-    #     max_drawdown = drawdowns.max()
-    #     # CAGR
-    #     CAGR = np.round(((1 + returns_cumsum.iloc[-1])**(1/year_total) - 1)*100, 2)
-    #     print("=====================")
-    #     print(f"Maximum Drawdown (MDD): {np.round(-max_drawdown, 2)}%")
-    #     print("Sharpe Ratio:", np.round(sharpe, 2))
-    #     print(f"CAGR: {CAGR}%")
-    #     print("Karma Ratio:", np.round(karma_ratio, 2))
-    #     print("=====================")
-    #     return -drawdowns
