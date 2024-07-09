@@ -46,7 +46,6 @@ class ScrapeTWSE(object):
                     
                 df_final = pd.concat(list_concat)
             except:
-                print(stock_symbol, year)
                 continue
         return df_final
                     
