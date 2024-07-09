@@ -1,6 +1,3 @@
-# Time Series
-
-
 ## Installation
 
 ```bash
@@ -8,18 +5,13 @@ python3 -m pip install requirements.txt
 python3 -m pip install requirements-ML.txt
 ```
 
-## Usage
-
-```python
-
-# plotting, backtest
-FactorPlotting.py
-
-# factor generator
-TimeSeries.py
-
-# current: arima garch in replace of Kalman
-cd factor/finished/ARIMA_GARCH_research.ipynb
+## Database Initialization
+```sh
+cd db_py/
+python3 DatabaseCreation.py
 ```
-
-除此之外都是沒用的東東
+Including Selenium initilization, database creation classification by website.
+## Factor Analysis
+1. ARMA_research.ipynb
+2. ARIMA_GARCH_research.ipynb
+3. ARMA_on_PE.ipynb
