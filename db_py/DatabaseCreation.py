@@ -8,11 +8,12 @@ from TWSE import ScrapeTWSE
 import os
 from tqdm import tqdm
 
+
+
 warnings.filterwarnings("ignore")
 class DatabaseCreation(DatabaseFunctions, ScrapeTWSE):
     
     __slots__ = ("tw_symbol_4", "tw_symbol_6", "directories")
-    
     
     def __init__(self):
         super().__init__()
@@ -26,10 +27,6 @@ class DatabaseCreation(DatabaseFunctions, ScrapeTWSE):
         with open("tw/symbol/symbol_6.json") as f:
             self.tw_symbol_6 = json.load(f)
 
-        print("==========start database init tw price...==========")
-        for year in range(2021, 2019, -1):
-            pass 
-            self.loop_price_TWSE(year=year)
         print("==========start database init tw pbratio...==========")
         for year in range(2024, 2017, -1):
             self.loop_pbratio_TWSE(year=year)
