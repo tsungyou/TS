@@ -11,6 +11,7 @@ cd db_py/
 python3 DatabaseCreation.py
 ```
 Including Selenium initilization, database creation classification by website.
+
 ## Factor Analysis
 1. ARMA_research.ipynb
 2. ARIMA_GARCH_research.ipynb

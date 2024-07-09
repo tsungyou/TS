@@ -6,7 +6,7 @@ import statsmodels.api as sm
 from statsmodels.tsa.stattools import pacf, acf
 from statsmodels.graphics.tsaplots import plot_pacf, plot_acf
 from arch import arch_model
-from FactorAnalysis import FactorAnalysis
+from factor.FactorAnalysis import FactorAnalysis
 from tqdm import tqdm
 import warnings
 warnings.filterwarnings("ignore")
