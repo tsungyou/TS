@@ -7,66 +7,45 @@ from datetime import datetime
 from DatabaseFunctions import DatabaseFunctions
 class DbInitTWSE(DatabaseFunctions):
     __slots__ = ("tw_symbol_4", "da_now")
-    os.chdir("../db/tw/")
+    os.chdir("../db")
     
     def __init__(self):
         super().__init__()
+        df = pd.read_parquet("tw/pdata/close_pct.parquet")
         self.tw_symbol_4 = None
-        with open("symbol/symbol_4.json") as f:
+        with open("tw/symbol/symbol_4.json") as f:
             self.tw_symbol_4 = json.load(f)
         self.da_now = datetime.now()
     
-    def _get_price_TWSE(self, stock_symbol = '2330', year=2024):
-        list_concat = []
-        limit_month = self.da_now.month if year == 2024 else 13
-        df_final = pd.DataFrame()
-        for month in range(1, limit_month):
+    def _get_price_TWSE(self, ticker = '2330', year=2024):
+        limit_month = self.da_now+1 if year == 2024 else 13
+        list_concat = [None] * (limit_month-1)
+        for index, month in enumerate(range(1, limit_month)):
             month = f"0{month}" if month < 10 else month
             da = f"{year}{month}01"
-
-            url_json = f"https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={da}&stockNo={stock_symbol}"
+            url_json = f"https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={da}&stockNo={ticker}"
             response = requests.get(url_json)
-            dicts = response.json()
-            try:
-                data = dicts['data']
-
-                data = [[self._data_cleaning_price(i[j]) for j in range(len(data[0]))] for i in data]
-                for sublist in data:
-                    sublist.append(stock_symbol)
-                df = pd.DataFrame(data)
-                list_concat.append(df)
-                    
-                df_final = pd.concat(list_concat)
-            except:
-                continue
-        return df_final
-
-    def _get_pbratio_TWSE(self, stock_symbol='2330', year=2024):
-        print(stock_symbol)
-        list_concat = []
-        limit_month = self.da_now.month if year == 2024 else 13
-        df_final = pd.DataFrame()
-        for month in range(1, limit_month):
-            month = f"0{month}" if month < 10 else month
-            da = f"{year}{month}01"
-            url_json = f"https://www.twse.com.tw/rwd/zh/afterTrading/BWIBBU?date={da}&stockNo={stock_symbol}&response=json"
-            response = requests.get(url_json)
-            dicts = response.json()
-            try:
-                data = dicts['data']
-                data = [[self._data_cleaning_pbratio(j[i]) for i in range(len(j))] for j in data]
-                for sublist in data:
-                    sublist.append(stock_symbol) 
-                df = pd.DataFrame(data)
-                list_concat.append(df)
-                df_final = pd.concat(list_concat)
-
-            except KeyError:
-                if month == 1:
-                    return None
-                continue
+            list_concat[index] = response.json()['data']
+        df_final = pd.DataFrame(sum(list_concat, []))
+        df_final['ticker'] = ticker
         return df_final
     
+    def _get_pbratio_TWSE(self, ticker='2330', year=2024):
+        limit_month = self.da_now+1 if year == 2024 else 13
+        list_concat = [None] * (limit_month-1)
+        for index, month in enumerate(range(1, limit_month)):
+            month = f"0{month}" if month < 10 else month
+            da = f"{year}{month}01"
+            url_json = f"https://www.twse.com.tw/rwd/zh/afterTrading/BWIBBU?date={da}&stockNo={ticker}&response=json"
+            response = requests.get(url_json)
+            list_concat[index] = response.json()['data']
+        df_final = pd.DataFrame(sum(list_concat, []))
+        df_final['ticker'] = ticker
+        return df_final
+    
+    def get_blockTrading_TWSE(self, ticker='2330', da=2024):
+        pass
+
     def get_TWSE_yearly(self, year, func=None):
         per_loop = 100
         if func == "pb":
@@ -84,13 +63,13 @@ class DbInitTWSE(DatabaseFunctions):
         for i in range(0, len(list(list_tw_stock)), per_loop):
             df_concat_by_ticker = []
             for ticker in tqdm(list(list_tw_stock[i:i+per_loop]), desc=f"{i}~{i+per_loop}"):
-                list_ = func(stock_symbol=ticker, year=year)
+                list_ = func(ticker=ticker, year=year)
                 df_concat_by_ticker.append(list_)
-            df = pd.concat(df_concat_by_ticker)
+            df = pd.concat(df_concat_by_ticker, ignore_index=True)
             df.columns = col
             df_concat_by_year.append(df)
-        df_final = pd.concat(df_concat_by_year)
-        df_final.to_parquet(f"{db}/{year}.parquet")
+        df_final = pd.concat(df_concat_by_year, ignore_index=True)
+        df_final.to_parquet(f"tw/{db}/{year}.parquet")
         return df_final
 
     # close, open, pct and others
@@ -100,7 +79,7 @@ class DbInitTWSE(DatabaseFunctions):
         pivoted = pivoted.astype(float)
         pivoted.astype(float).to_parquet(f"pdata/close.parquet")
         pivoted_pct = pivoted.pct_change().dropna(how="all")
-        pivoted_pct.to_parquet(f'pdata/close_pct.parquet')
+        pivoted_pct.to_parquet(f'tw/pdata/close_pct.parquet')
         return None
     
 if __name__ == "__main__":
