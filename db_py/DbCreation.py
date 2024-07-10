@@ -3,15 +3,15 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import json
 import warnings
-from DatabaseFunctions import DatabaseFunctions
-from TWSE import ScrapeTWSE
+from db_py.DbFunctions import DatabaseFunctions
+from TWSE import DbInitTWSE
 import os
 from tqdm import tqdm
 
 
 
 warnings.filterwarnings("ignore")
-class DatabaseCreation(DatabaseFunctions, ScrapeTWSE):
+class DatabaseCreation(DatabaseFunctions, DbInitTWSE):
     
     __slots__ = ("tw_symbol_4", "tw_symbol_6", "directories")
     
@@ -26,7 +26,6 @@ class DatabaseCreation(DatabaseFunctions, ScrapeTWSE):
             self.tw_symbol_4 = json.load(f)
         with open("tw/symbol/symbol_6.json") as f:
             self.tw_symbol_6 = json.load(f)
-
         print("==========start database init tw pbratio...==========")
         for year in range(2024, 2017, -1):
             self.loop_pbratio_TWSE(year=year)
@@ -50,27 +49,7 @@ class DatabaseCreation(DatabaseFunctions, ScrapeTWSE):
         self._save_json(dict_symbol_6, "tw/symbol/symbol_6.json")
         return True
 
-    def get_TWSE_price(self):
-        print("init TWSE Index price...")
-        list_concat = []
-        for year in range(2024, 2015, -1):
-            limit_month = 7 if year == 2024 else 13
-            for i in range(1, limit_month):
-                month = f"0{i}" if i < 10 else i
-                da = f"{year}{month}01"
-                url_twse = f"https://www.twse.com.tw/rwd/zh/afterTrading/FMTQIK?date={da}&response=json"
-                response = requests.get(url_twse)
-                dicts = response.json()
 
-                data = dicts['data']
-                data = [[self._data_cleaning_price(i[j]) for j in range(len(data[0]))] for i in data]
-                for sublist in data:
-                    sublist.append("TWSE Index")
-                df = pd.DataFrame(data)
-                list_concat.append(df)
-        df_final = pd.concat(list_concat)
-        df_final.to_parquet("tw/ind/TWSE.parquet")
-        return True
     
     # convert all price, pbratio datra to float datatype
     def get_ind_pdata_parquet(self):

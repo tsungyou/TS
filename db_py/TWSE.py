@@ -4,28 +4,37 @@ from tqdm import tqdm
 import requests
 import json
 from datetime import datetime
-from DatabaseFunctions import DatabaseFunctions
+from db_py.DbFunctions import DatabaseFunctions
 class DbInitTWSE(DatabaseFunctions):
     __slots__ = ("tw_symbol_4", "da_now")
     os.chdir("../db")
     
     def __init__(self):
         super().__init__()
+        # route tester
         df = pd.read_parquet("tw/pdata/close_pct.parquet")
+
+        self.da_now = datetime.now()
         self.tw_symbol_4 = None
         with open("tw/symbol/symbol_4.json") as f:
             self.tw_symbol_4 = json.load(f)
-        self.da_now = datetime.now()
-    
+
     def _get_price_TWSE(self, ticker = '2330', year=2024):
         limit_month = self.da_now+1 if year == 2024 else 13
         list_concat = [None] * (limit_month-1)
         for index, month in enumerate(range(1, limit_month)):
-            month = f"0{month}" if month < 10 else month
-            da = f"{year}{month}01"
-            url_json = f"https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={da}&stockNo={ticker}"
-            response = requests.get(url_json)
-            list_concat[index] = response.json()['data']
+            try:
+                month = f"0{month}" if month < 10 else month
+                da = f"{year}{month}01"
+                url_json = f"https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={da}&stockNo={ticker}"
+                response = requests.get(url_json)
+                list_concat[index] = response.json()['data']
+            except:
+                if month == 1:
+                    return None
+                else:
+                    list_concat = [item for item in list_concat if item is not None]                                        
+                    break
         df_final = pd.DataFrame(sum(list_concat, []))
         df_final['ticker'] = ticker
         return df_final
@@ -34,11 +43,18 @@ class DbInitTWSE(DatabaseFunctions):
         limit_month = self.da_now+1 if year == 2024 else 13
         list_concat = [None] * (limit_month-1)
         for index, month in enumerate(range(1, limit_month)):
-            month = f"0{month}" if month < 10 else month
-            da = f"{year}{month}01"
-            url_json = f"https://www.twse.com.tw/rwd/zh/afterTrading/BWIBBU?date={da}&stockNo={ticker}&response=json"
-            response = requests.get(url_json)
-            list_concat[index] = response.json()['data']
+            try:
+                month = f"0{month}" if month < 10 else month
+                da = f"{year}{month}01"
+                url_json = f"https://www.twse.com.tw/rwd/zh/afterTrading/BWIBBU?date={da}&stockNo={ticker}&response=json"
+                response = requests.get(url_json)
+                list_concat[index] = response.json()['data']
+            except:
+                if month == 1:
+                    return None
+                else:
+                    list_concat = [item for item in list_concat if item is not None]                                        
+                    break
         df_final = pd.DataFrame(sum(list_concat, []))
         df_final['ticker'] = ticker
         return df_final
@@ -73,15 +89,35 @@ class DbInitTWSE(DatabaseFunctions):
         return df_final
 
     # close, open, pct and others
-    def get_price_TWSE_to_pdata(self, df_concat: pd.DataFrame):
-        pivoted = df_concat.pivot(index='da', values="cl", columns="ticker").loc['2021-01-01':'2022-01-01']
-        pivoted = pivoted.ffill()
-        pivoted = pivoted.astype(float)
-        pivoted.astype(float).to_parquet(f"pdata/close.parquet")
-        pivoted_pct = pivoted.pct_change().dropna(how="all")
-        pivoted_pct.to_parquet(f'tw/pdata/close_pct.parquet')
-        return None
-    
+    # def get_price_TWSE_to_pdata(self, df_concat: pd.DataFrame):
+    #     pivoted = df_concat.pivot(index='da', values="cl", columns="ticker").loc['2021-01-01':'2022-01-01']
+    #     pivoted = pivoted.ffill()
+    #     pivoted = pivoted.astype(float)
+    #     pivoted.astype(float).to_parquet(f"pdata/close.parquet")
+    #     pivoted_pct = pivoted.pct_change().dropna(how="all")
+    #     pivoted_pct.to_parquet(f'tw/pdata/close_pct.parquet')
+    #     return None
+    def get_TWSE_price(self):
+        print("init TWSE Index price...")
+        list_concat = []
+        for year in range(2024, 2015, -1):
+            limit_month = 7 if year == 2024 else 13
+            for i in range(1, limit_month):
+                month = f"0{i}" if i < 10 else i
+                da = f"{year}{month}01"
+                url_twse = f"https://www.twse.com.tw/rwd/zh/afterTrading/FMTQIK?date={da}&response=json"
+                response = requests.get(url_twse)
+                dicts = response.json()
+
+                data = dicts['data']
+                data = [[self._data_cleaning_price(i[j]) for j in range(len(data[0]))] for i in data]
+                for sublist in data:
+                    sublist.append("TWSE Index")
+                df = pd.DataFrame(data)
+                list_concat.append(df)
+        df_final = pd.concat(list_concat)
+        df_final.to_parquet("tw/ind/TWSE.parquet")
+        return True
 if __name__ == "__main__":
     a = DbInitTWSE()
     start, end, func = 2023, 2018, "pb"

@@ -5,8 +5,8 @@ import pandas as pd
 import numpy as np
 
 
-class ScrapeGoodInfo(object):
-    __slots__ = ()
+class DbInitGoodInfo(object):
+    __slots__ = ("ticker_list", "chromedriver_path")
 
     def __init__(self):
         pass
@@ -18,3 +18,14 @@ class ScrapeGoodInfo(object):
             return None
         else:
             return True
+        
+    def get_ticker_list(self):
+        url_stock_list_goodinfo = "https://goodinfo.tw/tw/Lib.js/StockTW_ID_NM_List.js?45482.4170601852"
+        res = requests.get(url_stock_list_goodinfo)
+        soup = BeautifulSoup(res.text, 'lxml')
+        return soup
+    
+
+if __name__ == "__main__":
+    obj = DbInitGoodInfo()
+    print(obj.__slots__)
