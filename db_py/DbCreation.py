@@ -13,25 +13,11 @@ from tqdm import tqdm
 warnings.filterwarnings("ignore")
 class DatabaseCreation(DatabaseFunctions, TWSE):
     
-    __slots__ = ("tw_symbol_4", "tw_symbol_6", "directories")
-    
+    __slots__ = ("directories")
+    os.chdir("../db")
     def __init__(self):
         super().__init__()
-        self.directories = ['tw/pb_ratio', "tw/price"]
-        self.tw_symbol_4 = None
-        self.tw_symbol_6 = None
-        if not os.path.exists("tw/symbol/symbol_4.json"):
-            self.get_tw_symbol()
-        with open("tw/symbol/symbol_4.json") as f:
-            self.tw_symbol_4 = json.load(f)
-        with open("tw/symbol/symbol_6.json") as f:
-            self.tw_symbol_6 = json.load(f)
-        print("==========start database init tw pbratio...==========")
-        for year in range(2024, 2017, -1):
-            self.loop_pbratio_TWSE(year=year)
-            # self.get_TWSE_price()
-        print("==========finished==========")
-        self.get_ind_pdata_parquet()
+        
     def get_tw_symbol(self):
         url_histock_stock_list = "https://histock.tw/stock/rank.aspx?p=all"
         response = requests.get(url_histock_stock_list)
