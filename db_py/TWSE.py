@@ -4,15 +4,14 @@ from tqdm import tqdm
 import requests
 import json
 from datetime import datetime, timedelta
-from DbFunctions import DatabaseFunctions
-class TWSE(DatabaseFunctions):
+class TWSE(object):
     __slots__ = ("tw_symbol_4", "da_now", 'dirs')
-    self.dirs = "../db"
+    dirs = "../db"
     try:
-        os.chdir(self.dirs)
+        os.chdir(dirs)
     except FileNotFoundError:
-        os.makedirs(self.dirs)
-        os.chdir(self.dirs)
+        os.makedirs(dirs)
+        os.chdir(dirs)
     
     def __init__(self):
         super().__init__()
@@ -24,10 +23,37 @@ class TWSE(DatabaseFunctions):
         start, end = self.da_now.year, 2017
         for year in range(start, end, -1):
             for func in ['price', 'pb']:
-                df = self.get_TWSE_yearly(year=year, func=func)
+                self.get_TWSE_yearly(year=year, func=func)
         self.convert_to_pdata_pe_ratio()
         self.convert_to_pdata_price()
+        print("get TWSE index data...")
+        self.get_TWSE_TWSE()
 
+    def get_TWSE_TWSE(self):
+        def convert_to_gregorian(date_str):
+            year, month, day = date_str.split('/')
+            year = int(year) + 1911
+            return f'{year}-{month}-{day}'
+
+        list_list = []
+        for year in range(2024, 2010, -1):
+            limit_month = 8 if year == 2024 else 13
+            for i in range(1, limit_month):
+                month = f"0{i}" if i < 10 else i
+                da = f"{year}{month}01"
+                url_twse = f"https://www.twse.com.tw/rwd/zh/afterTrading/FMTQIK?date={da}&response=json"
+                response = requests.get(url_twse)
+                dicts = response.json()
+                list_list.append(dicts['data'])
+        list_sum = sum(list_list, [])
+        df = pd.DataFrame(list_sum, columns=dicts['fields'])
+        df['日期'] = df['日期'].apply(convert_to_gregorian)
+        df['日期'] = pd.to_datetime(df['日期'])
+        df.set_index("日期", inplace=True)
+        df.sort_index(ascending=True, inplace=True)
+        df.to_parquet("tw/ind/TWSE.parquet")
+        return None
+    
     def _get_price_TWSE(self, ticker = '2330', year=2024):
         '''
         example url: f"https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20240101&stockNo=2330"
@@ -55,7 +81,6 @@ class TWSE(DatabaseFunctions):
         '''
         example url: f"https://www.twse.com.tw/rwd/zh/afterTrading/BWIBBU?date=20240101&stockNo=2330&response=json"
         '''
-
         limit_month = self.da_now.month+1 if year == 2024 else 13
         list_concat = [None] * (limit_month-1)
         for index, month in enumerate(range(1, limit_month)):
@@ -76,8 +101,12 @@ class TWSE(DatabaseFunctions):
         return df_final
     
     def get_blockTrading_TWSE(self, ticker='2330', da=2024):
+        '''
+        example url:
+        https://www.twse.com.tw/rwd/zh/block/BFIAUU_sd?stockNo=2330&date=2024&response=json&_=1720554887120
+        '''
         pass
-
+    
     def get_TWSE_yearly(self, year, func=None):
         def convert_to_datetime(date_str):
             date_str = date_str.strip()
@@ -112,7 +141,6 @@ class TWSE(DatabaseFunctions):
             df_concat_by_year.append(df)
         df_final = pd.concat(df_concat_by_year, ignore_index=True)
 
-
         if db == "pb_ratio":
             df_final['index'] = df_final['da'].apply(check_year_prefix)
             df_final = df_final[df_final['index'] == True]
@@ -120,7 +148,7 @@ class TWSE(DatabaseFunctions):
             df_final.index = df_final.index.to_series().apply(convert_to_datetime)
             df_final.sort_index(ascending=True, inplace=True)
         df_final.to_parquet(f"tw/{db}/{year}.parquet")
-        return df_final
+        return None
 
     def get_TWSE_price(self):
         '''
@@ -137,14 +165,6 @@ class TWSE(DatabaseFunctions):
                 response = requests.get(url_twse)
                 dicts = response.json()
 
-                data = dicts['data']
-                data = [[self._data_cleaning_price(i[j]) for j in range(len(data[0]))] for i in data]
-                for sublist in data:
-                    sublist.append("TWSE Index")
-                df = pd.DataFrame(data)
-                list_concat.append(df)
-        df_final = pd.concat(list_concat)
-        df_final.to_parquet("tw/ind/TWSE.parquet")
         return True
     
     def convert_to_pdata_pe_ratio(self):

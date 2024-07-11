@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import numpy as np
 
 
-class Scraper:
+class Fubon:
     def __init__(self, date_start, date_end):
         self.date_start = date_start
         self.date_end   = date_end
@@ -163,5 +163,5 @@ class Scraper:
     
 
 if __name__ == "__main__":
-    test = Scraper(date_start="2023-01-01", date_end='2024-01-01')
+    test = Fubon(date_start="2023-01-01", date_end='2024-01-01')
     print(test.get_all_broker_details(ticker="2330"))
