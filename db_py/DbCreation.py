@@ -4,14 +4,14 @@ import pandas as pd
 import json
 import warnings
 from db_py.DbFunctions import DatabaseFunctions
-from TWSE import DbInitTWSE
+from TWSE import TWSE
 import os
 from tqdm import tqdm
 
 
 
 warnings.filterwarnings("ignore")
-class DatabaseCreation(DatabaseFunctions, DbInitTWSE):
+class DatabaseCreation(DatabaseFunctions, TWSE):
     
     __slots__ = ("tw_symbol_4", "tw_symbol_6", "directories")
     
@@ -49,46 +49,5 @@ class DatabaseCreation(DatabaseFunctions, DbInitTWSE):
         self._save_json(dict_symbol_6, "tw/symbol/symbol_6.json")
         return True
 
-
-    
-    # convert all price, pbratio datra to float datatype
-    def get_ind_pdata_parquet(self):
-        parquet_files = [os.path.join(self.directories[0], f) for f in os.listdir(self.directories[0]) if f.endswith(".parquet")] 
-        dfs = []
-
-        for file in parquet_files:
-            df = pd.read_parquet(file)
-            dfs.append(df)
-        df_concat = pd.concat(dfs)
-        _ = self._parquet_to_pdata(df_concat, "cl", save=True)
-        _ = self._parquet_to_pdata(df_concat, "op", save=True)
-        _ = self._parquet_to_pdata(df_concat, "vol(turnover)", save=True)
-        # _ = self._parquet_to_pdata(df_concat, "pe_ratio", save=True)
-        # _ = self._parquet_to_pdata(df_concat, "pb_ratio", save=True)
-        print("convert price.parquet to individual close, open, volume parquet file success...")
-        return None
-    def _parquet_to_pdata(self, df, values='cl', save=False):
-        pivoted = df.pivot(index='da', values=values, columns="ticker")
-        pivoted.replace("--", None, inplace=True)
-        pivoted = pivoted.ffill()
-        pivoted = pivoted.astype(float)
-        '''
-        vol(turnover): 成交金額
-        vol(volume): 成交股數
-        vol(amount): 成交筆數
-        '''
-        values_dict = {
-            "cl": "close",
-            "op": "open",
-            "vol(turnover)": "volume",
-            'vol(volume)': "volume(share)",
-            "yield": "yield",
-            "pe_ratio": "pe_ratio",
-            "pb_ratio": "pb_ratio",
-        }
-        if save:
-            pivoted.to_parquet(f'tw/pdata/{values_dict[values]}.parquet')
-        return pivoted
-    
 if __name__ == "__main__":
     a = DatabaseCreation()

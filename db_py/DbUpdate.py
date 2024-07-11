@@ -11,7 +11,7 @@ class DatabaseUpdate(DatabaseCreation, DatabaseFunctions):
         super().__init__()
     
 
-    def test(self):
+    def TWSE_by_da(self):
         print("test")
 
 
