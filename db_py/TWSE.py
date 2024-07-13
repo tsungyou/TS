@@ -37,7 +37,7 @@ class TWSE(object):
 
         list_list = []
         for year in range(2024, 2010, -1):
-            limit_month = 8 if year == 2024 else 13
+            limit_month = self.da_now.month + 1 if year == 2024 else 13
             for i in range(1, limit_month):
                 month = f"0{i}" if i < 10 else i
                 da = f"{year}{month}01"
@@ -106,7 +106,7 @@ class TWSE(object):
         https://www.twse.com.tw/rwd/zh/block/BFIAUU_sd?stockNo=2330&date=2024&response=json&_=1720554887120
         '''
         pass
-    
+
     def get_TWSE_yearly(self, year, func=None):
         def convert_to_datetime(date_str):
             date_str = date_str.strip()
