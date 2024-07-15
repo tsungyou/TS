@@ -5,8 +5,9 @@ import requests
 import json
 from datetime import datetime, timedelta
 class TWSE(object):
-    __slots__ = ("tw_symbol_4", "da_now", 'dirs')
+    __slots__ = ("tw_symbol_4", "da_now")
     dirs = "../db"
+    print(dirs)
     try:
         os.chdir(dirs)
     except FileNotFoundError:

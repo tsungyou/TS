@@ -1,6 +1,7 @@
 
 import pandas as pd
 import numpy as np
+import os
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -15,7 +16,8 @@ from Selenium import Selenium
 
 class MOPS(Selenium):
     __slots__ = ("test1", "test2", "service")
-
+    os.chdir('../db/')
+    print(os.getcwd())
     def __init__(self):
         super().__init__()
         obj = Selenium()
