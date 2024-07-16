@@ -21,39 +21,12 @@ class TWSE(object):
         with open("tw/symbol/symbol_4.json") as f:
             self.tw_symbol_4 = json.load(f)
         
-        start, end = self.da_now.year, 2017
-        for year in range(start, end, -1):
-            for func in ['price', 'pb']:
-                self.get_TWSE_yearly(year=year, func=func)
+        # start, end = self.da_now.year, 2017
+        # for year in range(start, end, -1):
+        #     for func in ['pb', 'price']:
+        #         self.get_TWSE_yearly(year=year, func=func)
         self.convert_to_pdata_pe_ratio()
-        self.convert_to_pdata_price()
-        print("get TWSE index data...")
-        self.get_TWSE_TWSE()
-
-    def get_TWSE_TWSE(self):
-        def convert_to_gregorian(date_str):
-            year, month, day = date_str.split('/')
-            year = int(year) + 1911
-            return f'{year}-{month}-{day}'
-
-        list_list = []
-        for year in range(2024, 2010, -1):
-            limit_month = self.da_now.month + 1 if year == 2024 else 13
-            for i in range(1, limit_month):
-                month = f"0{i}" if i < 10 else i
-                da = f"{year}{month}01"
-                url_twse = f"https://www.twse.com.tw/rwd/zh/afterTrading/FMTQIK?date={da}&response=json"
-                response = requests.get(url_twse)
-                dicts = response.json()
-                list_list.append(dicts['data'])
-        list_sum = sum(list_list, [])
-        df = pd.DataFrame(list_sum, columns=dicts['fields'])
-        df['日期'] = df['日期'].apply(convert_to_gregorian)
-        df['日期'] = pd.to_datetime(df['日期'])
-        df.set_index("日期", inplace=True)
-        df.sort_index(ascending=True, inplace=True)
-        df.to_parquet("tw/ind/TWSE.parquet")
-        return None
+        # self.convert_to_pdata_price()
     
     def _get_price_TWSE(self, ticker = '2330', year=2024):
         '''
@@ -117,9 +90,8 @@ class TWSE(object):
             return datetime(year, month, day)
         def check_year_prefix(date_str):
             if isinstance(date_str, str) and len(date_str) >= 3:
-                return date_str[:3] == "113"
+                return date_str[:3] == str(year - 1911)
             return False
-        per_loop = 100
         if func == "pb":
             db = "pb_ratio"
             func = self._get_pbratio_TWSE
@@ -129,12 +101,12 @@ class TWSE(object):
             func = self._get_price_TWSE
             col = ['da', "vol(volume)", "vol(turnover)", "op", "cl", "lo", "hi", "cl-op", "vol(amount)", "ticker"]
 
-        print(f"{func.__name__} for {year}")
         list_tw_stock = [key for key, value in self.tw_symbol_4.items() if value=="TW"]
         df_concat_by_year = []
+        per_loop = len(list_tw_stock)
         for i in range(0, len(list_tw_stock), per_loop):
             df_concat_by_ticker = []
-            for ticker in tqdm(list(list_tw_stock[i:i+per_loop]), desc=f"{i}~{i+per_loop}"):
+            for ticker in tqdm(list(list_tw_stock[i:i+per_loop]), desc=f"{func.__name__} for {year} total {i+per_loop}"):
                 list_ = func(ticker=ticker, year=year)
                 df_concat_by_ticker.append(list_)
             df = pd.concat(df_concat_by_ticker, ignore_index=True)
@@ -151,23 +123,6 @@ class TWSE(object):
         df_final.to_parquet(f"tw/{db}/{year}.parquet")
         return None
 
-    def get_TWSE_price(self):
-        '''
-        example url: f"https://www.twse.com.tw/rwd/zh/afterTrading/FMTQIK?date=20240101&response=json"
-        '''
-        print("init TWSE Index price...")
-        list_concat = []
-        for year in range(2024, 2015, -1):
-            limit_month = 7 if year == 2024 else 13
-            for i in range(1, limit_month):
-                month = f"0{i}" if i < 10 else i
-                da = f"{year}{month}01"
-                url_twse = f"https://www.twse.com.tw/rwd/zh/afterTrading/FMTQIK?date={da}&response=json"
-                response = requests.get(url_twse)
-                dicts = response.json()
-
-        return True
-    
     def convert_to_pdata_pe_ratio(self):
         print("start converting pe, pb from pb_ratio directory to pdata...")
         directory = 'tw/pb_ratio'
@@ -184,7 +139,6 @@ class TWSE(object):
             df_pivot.ffill(inplace=True)
             df_pivot = df_pivot.loc['2018-01-01':(datetime.now()+timedelta(days=1)).strftime("%Y-%m-%d")]
             df_pivot.sort_index(ascending=True, inplace=True)
-            df_pivot = df_pivot.apply(lambda x: x.str.replace(',', '').astype(float))
             df_pivot.dropna(how='all', axis=1, inplace=True)
             df_pivot.to_parquet(f"tw/pdata/{values}.parquet")
             print(f"store pdata of values {values} to tw/pdata/{values}.parquet successful")
@@ -213,14 +167,14 @@ class TWSE(object):
             df_pivot.to_parquet(f"tw/pdata/{values}.parquet")
             print(f"store pdata of values {values} to tw/pdata/{values}.parquet successful")
             df_pivot_pct = df_pivot.pct_change().dropna()
-            df_pivot.to_parquet(f"tw/pdata/{values}_pct.parquet")
+            df_pivot_pct.to_parquet(f"tw/pdata/{values}_pct.parquet")
             print(f"store pdata of values {values} to tw/pdata/{values}_pct.parquet successful")
         return None
 
 if __name__ == "__main__":
     obj = TWSE()
-    start, end, func = 2018, 2017, "price"
-    for year in range(start, end, -1):
-        df = obj.get_TWSE_yearly(year=year, func=func)
-    obj.convert_to_pdata_pe_ratio()
-    obj.convert_to_pdata_price()
+    # start, end, func = 2018, 2017, "price"
+    # for year in range(start, end, -1):
+    #     df = obj.get_TWSE_yearly(year=year, func=func)
+    # obj.convert_to_pdata_pe_ratio()
+    # obj.convert_to_pdata_price()
