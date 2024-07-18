@@ -27,6 +27,42 @@ class TWSE(object):
         #         self.get_TWSE_yearly(year=year, func=func)
         self.convert_to_pdata_pe_ratio()
         # self.convert_to_pdata_price()
+    def get_TWSE_TWSE(self):
+        '''
+        url     : https://www.twse.com.tw/zh/indices/taiex/mi-5min-hist.html
+        url_json: https://www.twse.com.tw/rwd/zh/TAIEX/MI_5MINS_HIST?date=20240701&response=json
+        '''
+        list_  = []
+        for year in tqdm(range(2024, 2010, -1), desc='TWSE from 2024 to 2010'):
+            limit_month = datetime.now().month if year == datetime.now().year else 13
+            for month in range(1, limit_month):
+                try:
+                    mo = f"0{month}" if month < 10 else month
+                    url_twse = f"https://www.twse.com.tw/rwd/zh/TAIEX/MI_5MINS_HIST?date={year}{mo}01&response=json"
+                    res = requests.get(url_twse)
+                    js = res.json()
+                    list_.append(js['data'])
+                except KeyError:
+                    time.sleep(2)
+                    print("again for ", year , month)
+                    mo = f"0{month}" if month < 10 else month
+                    url_twse = f"https://www.twse.com.tw/rwd/zh/TAIEX/MI_5MINS_HIST?date={year}{mo}01&response=json"
+                    res = requests.get(url_twse)
+                    js = res.json()
+                    list_.append(js['data'])
+        list_list = sum(list_, [])
+        df = pd.DataFrame(list_list, columns=['da', 'open', 'high', 'low', 'close'])
+
+        def convert_to_2024(da):
+            year, month, day = da.split("/")
+            return f"{int(year)+1911}-{month}-{day}"
+        df['da'] = df['da'].apply(convert_to_2024)
+        for i in range(1, len(df.columns)):
+            df.iloc[:, i] = df.iloc[:, i].apply(lambda x: float(x.replace(",", "")))
+        df.set_index("da", inplace=True)
+        df.sort_index(ascending=True, inplace=True)
+        df.to_parquet("tw/ind/TWSE.parquet")
+        return None
     
     def _get_price_TWSE(self, ticker = '2330', year=2024):
         '''
