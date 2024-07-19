@@ -29,3 +29,29 @@
             "    AND P1.DA >= %s " + \
             "ORDER BY " + \
             "    P1.DA ASC"
+
+
+  if std_otc <= 3 and cl_otc > sma20_otc:
+                fund3_timing_stock_beta = fund1_timing_stock_beta
+                real_exposure.append(1)
+                print(str(da)+' '+str(std_otc) + " 1 " + str(std_otc-pre_std_otc))
+                flag = "波動牛📈"
+                flag_singal = 1;
+            elif std_otc <= 1 or std_twii >= 3.5:
+                fund3_timing_stock_beta = fund1_timing_stock_beta
+                real_exposure.append(1)
+                print(str(da)+' '+str(std_otc) + " 1 " + str(std_otc-pre_std_otc))
+                flag = "穩定牛📈"
+                flag_singal = 1;
+            elif (std_otc-pre_std_otc) > 0.5 and cl_otc > sma60_otc and cl_otc < sma20_otc:
+                fund3_timing_stock_beta = fund1_timing_stock_beta
+                real_exposure.append(1)
+                print(str(da)+' '+str(std_otc) + " 1 " + str(std_otc-pre_std_otc))
+                flag = "抄底牛📈"
+                flag_singal = 1;
+            else:
+                fund3_timing_stock_beta = 0
+                real_exposure.append(0)
+                print(str(da)+' '+str(std_otc) + " 0 "+ str(std_otc-pre_std_otc))
+                flag = "害怕熊📉"
+                flag_singal = 0;
