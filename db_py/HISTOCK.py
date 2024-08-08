@@ -2,10 +2,10 @@ from bs4 import BeautifulSoup
 import requests
 
 
-def get_tw_symbol(self):
+def get_tw_symbol():
     url_histock_stock_list = "https://histock.tw/stock/rank.aspx?p=all"
     response = requests.get(url_histock_stock_list)
-    soup = BeautifulSoup(response.text, "lxml")
+    soup = BeautifulSoup(response.text, "html.parser")
     td = soup.find_all("td")
     td_sep = [[self._data_cleaning_get_tw_symbol_update(td[j]) for j in range(i-13, i)] for i in range(13, len(td), 13)]
 
@@ -18,3 +18,7 @@ def get_tw_symbol(self):
     self._save_json(dict_symbol_4, "tw/symbol/symbol_4.json")
     self._save_json(dict_symbol_6, "tw/symbol/symbol_6.json")
     return True
+
+
+if __name__ == "__main__":
+    get_tw_symbol()

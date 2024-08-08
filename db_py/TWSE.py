@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 from tqdm import tqdm
+import time
 import requests
 import json
 from datetime import datetime, timedelta
@@ -18,14 +19,14 @@ class TWSE(object):
         super().__init__()
         self.da_now = datetime.now()
         self.tw_symbol_4 = None
-        with open("tw/symbol/symbol_4.json") as f:
-            self.tw_symbol_4 = json.load(f)
+        # with open("tw/symbol/symbol_4.json") as f:
+        #     self.tw_symbol_4 = json.load(f)
         
         # start, end = self.da_now.year, 2017
         # for year in range(start, end, -1):
         #     for func in ['pb', 'price']:
         #         self.get_TWSE_yearly(year=year, func=func)
-        self.convert_to_pdata_pe_ratio()
+        # self.convert_to_pdata_pe_ratio()
         # self.convert_to_pdata_price()
     def get_TWSE_TWSE(self):
         '''
@@ -34,7 +35,7 @@ class TWSE(object):
         '''
         list_  = []
         for year in tqdm(range(2024, 2010, -1), desc='TWSE from 2024 to 2010'):
-            limit_month = datetime.now().month if year == datetime.now().year else 13
+            limit_month = datetime.now().month+1 if year == datetime.now().year else 13
             for month in range(1, limit_month):
                 try:
                     mo = f"0{month}" if month < 10 else month
@@ -209,8 +210,10 @@ class TWSE(object):
 
 if __name__ == "__main__":
     obj = TWSE()
-    # start, end, func = 2018, 2017, "price"
+    # start, end, func = 2024, 2017, "price"
     # for year in range(start, end, -1):
     #     df = obj.get_TWSE_yearly(year=year, func=func)
-    # obj.convert_to_pdata_pe_ratio()
-    # obj.convert_to_pdata_price()
+    # # obj.convert_to_pdata_pe_ratio()
+    # # obj.convert_to_pdata_price()
+
+    obj.get_TWSE_TWSE()

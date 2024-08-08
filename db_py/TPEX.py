@@ -51,7 +51,7 @@ class TPEX(object):
         '''
         list_  = []
         for year in tqdm(range(113, 102, -1), desc='TWOTCI from 113 to 103'):
-            limit_month = datetime.now().month if year == datetime.now().year-1911 else 13
+            limit_month = datetime.now().month+1 if year == datetime.now().year-1911 else 13
             for month in range(1, limit_month):
                 try:
                     mo = f"0{month}" if month < 10 else month
@@ -85,4 +85,4 @@ class TPEX(object):
     
 if __name__ == "__main__":
     obj = TPEX()
-    obj.get_two_index()
+    obj.get_TWOTCI_TPEX()
