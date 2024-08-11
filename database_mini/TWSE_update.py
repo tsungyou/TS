@@ -58,7 +58,7 @@ class TWSE_update(object):
                 self.insert_df_into_db(df, cursor)
             except Exception as e:
                 print(f"no data to update for block_trading, {year}{mo}{date}, passed")
-    def stock_price_init(self):
+    def stock_price_update(self):
         pass
     
     def insert_df_into_db(self, df: pd.DataFrame, cursor):

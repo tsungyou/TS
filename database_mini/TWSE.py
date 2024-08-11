@@ -136,44 +136,7 @@ class TWSE(object):
         except Exception as e:
             return []
         
-    def twse_twotci_init(self):
-        '''
-        url     : https://www.twse.com.tw/zh/indices/taiex/mi-5min-hist.html
-        url_json: https://www.twse.com.tw/rwd/zh/TAIEX/MI_5MINS_HIST?date=20240701&response=json
-        '''
-        start = 2015
-        list_  = []
-        for year in tqdm(range(2024, 2015, -1), desc='TWSE from 2024 to 2015'):
-            limit_month = self.month if year == self.year else 12
-            for month in range(limit_month, 0, -1):
-                try:
-                    mo = f"0{month}" if month < 10 else month
-                    url_twse = f"https://www.twse.com.tw/rwd/zh/TAIEX/MI_5MINS_HIST?date={year}{mo}01&response=json"
-                    res = requests.get(url_twse)
-                    js = res.json()
-                    list_.append(js['data'])
-                except KeyError:
-                    time.sleep(2)
-                    print("again for ", year , month)
-                    mo = f"0{month}" if month < 10 else month
-                    url_twse = f"https://www.twse.com.tw/rwd/zh/TAIEX/MI_5MINS_HIST?date={year}{mo}01&response=json"
-                    res = requests.get(url_twse)
-                    js = res.json()
-                    list_.append(js['data'])
-        list_list = sum(list_, [])
-        df = pd.DataFrame(list_list, columns=['da', 'op', 'hi', 'lo', 'cl'])
 
-        def convert_to_2024(da):
-            year, month, day = da.split("/")
-            return f"{int(year)+1911}-{month}-{day}"
-        df['da'] = df['da'].apply(convert_to_2024)
-        for i in range(1, len(df.columns)):
-            df.iloc[:, i] = df.iloc[:, i].apply(lambda x: float(x.replace(",", "")))
-        df.insert(loc=1, column='vol', value=[0]*len(df))
-        df.insert(loc=2, column='vol_share', value=[0]*len(df))
-        df['code'] = "TWSE Index"
-        self.insert_df_into_db(df, table='public.price')
-        
     def insert_df_into_db(self, df: pd.DataFrame, table='public.block_trade'):
         df_list = df.values.tolist()
         try:

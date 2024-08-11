@@ -27,82 +27,88 @@ class INDEX(object):
             print("Connection Successful!")
         print("Connection already existed")
         return None
-    def twse_init(self):
+    def twse_update(self):
         '''
         url     : https://www.twse.com.tw/zh/indices/taiex/mi-5min-hist.html
         url_json: https://www.twse.com.tw/rwd/zh/TAIEX/MI_5MINS_HIST?date=20240701&response=json
         '''
-        start = 2015
-        list_  = []
-        for year in tqdm(range(2024, 2015, -1), desc='TWSE from 2024 to 2015'):
-            limit_month = self.month if year == self.year else 12
-            for month in range(limit_month, 0, -1):
-                try:
-                    mo = f"0{month}" if month < 10 else month
-                    url_twse = f"https://www.twse.com.tw/rwd/zh/TAIEX/MI_5MINS_HIST?date={year}{mo}01&response=json"
-                    res = requests.get(url_twse)
-                    js = res.json()
-                    list_.append(js['data'])
-                except KeyError:
-                    time.sleep(2)
-                    print("again for ", year , month)
-                    mo = f"0{month}" if month < 10 else month
-                    url_twse = f"https://www.twse.com.tw/rwd/zh/TAIEX/MI_5MINS_HIST?date={year}{mo}01&response=json"
-                    res = requests.get(url_twse)
-                    js = res.json()
-                    list_.append(js['data'])
+        list_ = []
+        query = sql.SQL("select da from price where code = 'TWSE Index' order by da desc limit 1;")
+        self.cursor.execute(query)
+        rows = self.cursor.fetchone()
+        da_newest = rows[0]
+        newest_mo = da_newest.month
+        current_mo = self.month
+        for mo in range(current_mo - newest_mo + 1):
+            month = f"0{current_mo}" if current_mo < 10 else current_mo
+            url_twse = f"https://www.twse.com.tw/rwd/zh/TAIEX/MI_5MINS_HIST?date={self.year}{month}01&response=json"
+            res = requests.get(url_twse)
+            js = res.json()
+            list_.append(js['data'])
+            current_mo += 1
         list_list = sum(list_, [])
         df = pd.DataFrame(list_list, columns=['da', 'op', 'hi', 'lo', 'cl'])
-
         def convert_to_2024(da):
             year, month, day = da.split("/")
-            return f"{int(year)+1911}-{month}-{day}"
+            return pd.to_datetime(f"{int(year)+1911}-{month}-{day}")
         df['da'] = df['da'].apply(convert_to_2024)
         for i in range(1, len(df.columns)):
             df.iloc[:, i] = df.iloc[:, i].apply(lambda x: float(x.replace(",", "")))
-        df.insert(loc=1, column='vol_share', value=[0]*len(df))
-        df.insert(loc=2, column='vol', value=[0]*len(df))
-        df['code'] = "TWSE Index"
-        self.insert_df_into_db(df, table='public.price')
+        appending = df[df['da'] > da_newest]
+        if len(appending) == 0:
+            print("nothing to append for TWSE")
+        else:
+            appending.insert(loc=1, column='vol_share', value=[0]*len(appending))
+            appending.insert(loc=2, column='vol', value=[0]*len(appending))
+            appending['code'] = "TWSE Index"
+            self.insert_df_into_db(appending, table='public.price')
 
-    def twotci_init(self=None):
+    def twotci_update(self=None):
         '''
         url     : https://www.tpex.org.tw/web/stock/iNdex_info/inxh/Inx.php?l=zh-tw
         url_json: https://www.tpex.org.tw/web/stock/iNdex_info/inxh/Inx_result.php?l=zh-tw&d=113/06/01
         '''
-        list_  = []
-        for year in tqdm(range(113, 104, -1), desc='TWOTCI from 113 to 104'):
-            limit_month = datetime.now().month+1 if year == datetime.now().year-1911 else 13
-            for month in range(1, limit_month):
-                try:
-                    mo = f"0{month}" if month < 10 else month
-                    url_twotci = f'https://www.tpex.org.tw/web/stock/iNdex_info/inxh/Inx_result.php?l=zh-tw&d={year}/{mo}/01'
-                    res = requests.get(url_twotci)
-                    js = res.json()
-                    list_.append(js['aaData'])
-                except KeyError:
-                    time.sleep(2)
-                    print("again for ", year , month)
-                    mo = f"0{month}" if month < 10 else month
-                    url_twotci = f'https://www.tpex.org.tw/web/stock/iNdex_info/inxh/Inx_result.php?l=zh-tw&d={year}/{mo}/01'
-                    res = requests.get(url_twotci)
-                    js = res.json()
-                    list_.append(js['aaData'])
+        list_ = []
+        query = sql.SQL("select da from price where code = 'TWSE Index' order by da desc limit 1;")
+        self.cursor.execute(query)
+        rows = self.cursor.fetchone()
+        da_newest = rows[0]
+        newest_mo = da_newest.month
+        current_mo = self.month
+        for mo in range(current_mo - newest_mo + 1):
+            month = f"0{current_mo}" if current_mo < 10 else current_mo
+            try:
+                url_twotci = f'https://www.tpex.org.tw/web/stock/iNdex_info/inxh/Inx_result.php?l=zh-tw&d={self.year-1911}/{month}/01'
+                res = requests.get(url_twotci)
+                js = res.json()
+                list_.append(js['aaData'])
+            except KeyError:
+                time.sleep(2)
+                print("again for ", self.year , month)
+                mo = f"0{month}" if month < 10 else month
+                url_twotci = f'https://www.tpex.org.tw/web/stock/iNdex_info/inxh/Inx_result.php?l=zh-tw&d={self.year-1911}/{mo}/01'
+                res = requests.get(url_twotci)
+                js = res.json()
+                list_.append(js['aaData'])
 
         list_list = sum(list_, [])
         df = pd.DataFrame(list_list, columns=['da', 'op', 'hi', 'lo', 'cl', 'code'])
 
         def convert_to_2024(da):
             year, month, day = da.split("/")
-            return f"{int(year)+1911}-{month}-{day}"
+            return pd.to_datetime(f"{int(self.year)}-{month}-{day}")
         df['da'] = df['da'].apply(convert_to_2024)
 
         for i in range(1, len(df.columns)):
             df.iloc[:, i] = df.iloc[:, i].apply(lambda x: float(x.replace(",", "")))
-        df.insert(loc=1, column='vol_share', value=[0]*len(df))
-        df.insert(loc=2, column='vol', value=[0]*len(df))
-        df['code'] = "TWOTCI Index"
-        self.insert_df_into_db(df, table='public.price')
+        appending = df[df['da'] > da_newest]
+        if len(appending) == 0:
+            print("nothing to append for TWOTCI")
+        else:
+            appending.insert(loc=1, column='vol_share', value=[0]*len(appending))
+            appending.insert(loc=2, column='vol', value=[0]*len(appending))
+            appending['code'] = "TWOTCI Index"
+            self.insert_df_into_db(appending, table='public.price')
 
     def insert_df_into_db(self, df: pd.DataFrame, table='public.block_trade'):
         df_list = df.values.tolist()
@@ -138,5 +144,5 @@ class INDEX(object):
         pass
 if __name__ == "__main__":
     obj = INDEX()
-    obj.twse_init()
-    obj.twotci_init()
+    obj.twse_update()
+    obj.twotci_update()
