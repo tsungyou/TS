@@ -14,7 +14,7 @@ class TWSE(object):
     def __init__(self):
         self.conn = None
         self.cursor = None    
-        self.db_init_year = 2018
+        self.db_init_year = 2023
         self.year = datetime.now().year
         self.month = datetime.now().month
         self._connection()
@@ -89,33 +89,42 @@ class TWSE(object):
         })
         self.insert_df_into_db(df, table='public.maincode')
 
+    def stock_code_init_tw(self):
+        '''
+        https://www.twse.com.tw/zh/trading/historical/bwibbu-day.html   
+        https://www.twse.com.tw/rwd/zh/afterTrading/BWIBBU_d?date=20240809&selectType=ALL&response=json
+        '''
+        pass
+
     def stock_price_init(self):
         self.cursor.execute(sql.SQL("Select code from public.maincode where listed = 'TW';"))
         self.conn.commit()
         res = self.cursor.fetchall()
         stock_list = [i[0] for i in res]
-        for code in tqdm(stock_list):
-            df = self._(code)
-            if len(df) != 0:
-                self.insert_df_into_db(df, table='public.price')
-    def _(self, code):
+        list_df = []
+        for year in range(self.year, self.db_init_year, -1):
+            for code in tqdm(stock_list):
+                df = self._(code, year=year)
+                list_df.append(df)
+            final_df = pd.concat(list_df)
+            self.insert_df_into_db(final_df, table='public.price')
+    def _(self, code, year):
         list_concat = []
         df_final = []
-        for year in range(self.year, self.db_init_year, -1):
-            limit_month = self.month if year == self.year else 12
-            for _, month in enumerate(range(limit_month, 0, -1)):
-                try:
-                    month = f"0{month}" if month < 10 else month
-                    da = f"{year}{month}01"
-                    url_json = f"https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={da}&stockNo={code}"
-                    response = requests.get(url_json)
-                    list_concat.append(response.json()['data'])
-                except:
-                    if month == 1:
-                        return []
-                    else:
-                        list_concat = [item for item in list_concat if item is not None]                                        
-                        break
+        limit_month = self.month if year == self.year else 12
+        for _, month in enumerate(range(limit_month, 0, -1)):
+            try:
+                month = f"0{month}" if month < 10 else month
+                da = f"{year}{month}01"
+                url_json = f"https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={da}&stockNo={code}"
+                response = requests.get(url_json)
+                list_concat.append(response.json()['data'])
+            except:
+                if month == 1:
+                    return []
+                else:
+                    list_concat = [item for item in list_concat if item is not None]                                        
+                    break
         try:
             df_final = pd.DataFrame(sum(list_concat, []))
             df_final = df_final.iloc[:, 0:-2]
@@ -159,7 +168,6 @@ class TWSE(object):
         except Exception as e:
             print(e)
             
-    
     def create_table_if_not_exist(self, db):
         '''
         db options:
@@ -319,5 +327,5 @@ if __name__ == "__main__":
     # obj.block_trading_init()
     
     ## not finished
-    # obj.create_table_if_not_exist(db='stock_price')
-    # obj.stock_price_init()
+    obj.create_table_if_not_exist(db='stock_price')
+    obj.stock_price_init()

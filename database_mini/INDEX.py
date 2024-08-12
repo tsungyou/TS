@@ -94,7 +94,7 @@ class INDEX(object):
 
         def convert_to_2024(da):
             year, month, day = da.split("/")
-            return f"{int(year)+1911}-{month}-{day}"
+            return f"{int(year)}-{month}-{day}"
         df['da'] = df['da'].apply(convert_to_2024)
 
         for i in range(1, len(df.columns)):

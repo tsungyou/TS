@@ -110,13 +110,6 @@ class TWSE(object):
         df_final = pd.DataFrame(sum(list_concat, []))
         df_final['ticker'] = ticker
         return df_final
-    
-    def get_blockTrading_TWSE(self, ticker='2330', da=2024):
-        '''
-        example url:
-        https://www.twse.com.tw/rwd/zh/block/BFIAUU_sd?stockNo=2330&date=2024&response=json&_=1720554887120
-        '''
-        pass
 
     def get_TWSE_yearly(self, year, func=None):
         def convert_to_datetime(date_str):
