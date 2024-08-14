@@ -1,13 +1,11 @@
-import requests
-from bs4 import BeautifulSoup
-import pandas as pd
-import psycopg2
-from psycopg2 import sql
-from tqdm import tqdm
-import yfinance as yf
-import json
-import time
-from datetime import datetime, timedelta
+import requests # type: ignore
+from bs4 import BeautifulSoup # type: ignore
+import pandas as pd # type: ignore
+import psycopg2 # type: ignore
+from psycopg2 import sql # type: ignore
+from tqdm import tqdm # type: ignore
+import yfinance as yf # type: ignore
+from datetime import datetime
 from config import DB_HOST, DB_NAME, DB_PASS, DB_USER
 
 class TWSE(object):

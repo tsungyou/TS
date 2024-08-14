@@ -1,13 +1,10 @@
 
-import pandas as pd
-import psycopg2
-from psycopg2 import sql
-from tqdm import tqdm
-import requests
-import numpy as np
-import json
-import time
-from datetime import datetime, timedelta
+import pandas as pd # type: ignore
+import psycopg2 # type: ignore
+from psycopg2 import sql # type: ignore
+import requests # type: ignore
+import numpy as np # type: ignore
+from datetime import datetime
 import warnings
 warnings.filterwarnings("ignore")
 from config import DB_HOST, DB_NAME, DB_PASS, DB_USER

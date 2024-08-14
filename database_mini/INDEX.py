@@ -1,13 +1,12 @@
 
-import requests
-from bs4 import BeautifulSoup
-import pandas as pd
-import psycopg2
-from psycopg2 import sql
-from tqdm import tqdm
-import json
+import requests # type: ignore
+from bs4 import BeautifulSoup # type: ignore
+import pandas as pd # type: ignore
+import psycopg2 # type: ignore
+from psycopg2 import sql # type: ignore
+from tqdm import tqdm # type: ignore
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from config import DB_HOST, DB_NAME, DB_PASS, DB_USER
 
 class INDEX(object):
