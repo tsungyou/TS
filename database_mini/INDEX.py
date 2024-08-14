@@ -123,19 +123,6 @@ class INDEX(object):
             ''', df_list)     
         self.conn.commit()
     
-    def create_table_if_not_exist(self, db):
-        '''
-        db options:
-        1. block_trade
-        2. signal
-        3. stock_code
-        4. stock_price
-        '''
-        create_query = ""
-        self.cursor.execute(create_query)
-        self.conn.commit()
-    def stock_pe_init(self):
-        pass
 if __name__ == "__main__":
     obj = INDEX()
     obj.twse_init()

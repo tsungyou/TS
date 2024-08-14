@@ -101,13 +101,17 @@ class TWSE(object):
         self.conn.commit()
         res = self.cursor.fetchall()
         stock_list = [i[0] for i in res]
-        list_df = []
         for year in range(self.year, self.db_init_year, -1):
             for code in tqdm(stock_list):
-                df = self._(code, year=year)
-                list_df.append(df)
-            final_df = pd.concat(list_df)
-            self.insert_df_into_db(final_df, table='public.price')
+                try:
+                    list_df = []
+                    df = self._(code, year=year)
+                    list_df.append(df)
+                    final_df = pd.concat(list_df)
+                    self.insert_df_into_db(final_df, table='public.price')
+                except:
+                    print(code, year)
+                    continue
     def _(self, code, year):
         list_concat = []
         df_final = []

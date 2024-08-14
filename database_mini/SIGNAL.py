@@ -196,7 +196,7 @@ class SIGNAL(object):
     def signal_pe_pb_yield(self):
         df_row = []
         month = f"0{self.month}" if self.month < 10 else self.month
-        for i in range(1, datetime.now().month+1):
+        for i in range(1, datetime.now().day+1):
             try:
                 da = f"0{i}" if i < 10 else i
                 date = f"2024{month}{da}"
@@ -225,13 +225,13 @@ class SIGNAL(object):
         df_signal.columns = ['code', 'da', 'cl', 'signal', 'strategy']
         df_signal['strategy'] = 'pe'
         df_signal['signal'] = 1
-        print(df_signal)
-        # if res:
-        #     df_signal = df_signal[df_signal['da'] > res[0]]
+        print(df_signal.tail())
+        if res:
+            df_signal = df_signal[df_signal['da'] > res[0]]
         self.insert_df_into_db(df_signal, table='public.block_code3_deatil')
         print("insert signal pe_pb_yeild success")
 if __name__ == "__main__":
     obj = SIGNAL()
-    # obj.create_table_if_not_exist(db='signal')
-    # obj.signal_twse_bullbear()
+    obj.create_table_if_not_exist(db='signal')
+    obj.signal_twse_bullbear()
     obj.signal_pe_pb_yield()
