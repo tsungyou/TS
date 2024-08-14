@@ -1,8 +1,7 @@
-import requests
-import pandas as pd
-import psycopg2
-from psycopg2 import sql
-from tqdm import tqdm
+import requests # type: ignore
+import pandas as pd # type: ignore
+import psycopg2 # type: ignore
+from psycopg2 import sql # type: ignore
 from datetime import datetime, timedelta
 from config import DB_HOST, DB_NAME, DB_PASS, DB_USER
 
