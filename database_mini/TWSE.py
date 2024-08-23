@@ -94,12 +94,12 @@ class TWSE(object):
         '''
         pass
 
-    def stock_price_init(self):
+    def stock_price_init(self, current, start):
         self.cursor.execute(sql.SQL("Select code from public.maincode where listed = 'TW';"))
         self.conn.commit()
         res = self.cursor.fetchall()
         stock_list = [i[0] for i in res]
-        for year in range(self.year, self.db_init_year, -1):
+        for year in range(current, start, -1):
             for code in tqdm(stock_list):
                 try:
                     list_df = []
@@ -204,7 +204,7 @@ class TWSE(object):
         elif db == "signal":
             create_query = '''
             -- Table: public.block_code3_deatil
-            DROP TABLE IF EXISTS public.block_code3_deatil;
+            -- DROP TABLE IF EXISTS public.block_code3_deatil;
             CREATE TABLE IF NOT EXISTS public.block_code3_deatil
             (
                 code character varying(50) COLLATE pg_catalog."default",
@@ -244,7 +244,7 @@ class TWSE(object):
         elif db == "stock_price":
             create_query = '''
             -- Table: public.price
-            DROP TABLE IF EXISTS public.price;
+            -- DROP TABLE IF EXISTS public.price;
 
             CREATE TABLE IF NOT EXISTS public.price
             (
@@ -328,6 +328,6 @@ if __name__ == "__main__":
     # obj.stock_code_init()
     # obj.block_trading_init()
     
-    ## not finished
-    obj.create_table_if_not_exist(db='stock_price')
-    obj.stock_price_init()
+    # obj.create_table_if_not_exist(db='stock_price')
+    ### obj.stock_price_init(current=obj.year, start=obj.db_init_year)
+    # obj.stock_price_init(current=2023, start=2020)

@@ -69,7 +69,7 @@ class INDEX(object):
         url_json: https://www.tpex.org.tw/web/stock/iNdex_info/inxh/Inx_result.php?l=zh-tw&d=113/06/01
         '''
         list_ = []
-        query = sql.SQL("select da from price where code = 'TWSE Index' order by da desc limit 1;")
+        query = sql.SQL("select da from price where code = 'TWOTCI Index' order by da desc limit 1;")
         self.cursor.execute(query)
         rows = self.cursor.fetchone()
         da_newest = rows[0]
