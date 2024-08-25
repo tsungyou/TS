@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.stock_1m_price
     op double precision,
     vol bigint,
     adj double precision,
-    CONSTRAINT blp_stockprice_pkey PRIMARY KEY (da, code)
+    CONSTRAINT blp_stockprice_pkey_1m PRIMARY KEY (da, code)
 )
 WITH (
     OIDS = FALSE
