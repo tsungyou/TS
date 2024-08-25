@@ -1,3 +1,0 @@
-matplotlib
-thetadata
-polygon-api-client

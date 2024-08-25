@@ -1,6 +1,6 @@
 -- Table: public.price
 
--- DROP TABLE IF EXISTS public.price;
+DROP TABLE IF EXISTS public.price;
 
 CREATE TABLE IF NOT EXISTS public.price
 (
@@ -20,9 +20,9 @@ WITH (
 TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS public.price
-    OWNER to mini;
+    OWNER to postgres;
 
-GRANT ALL ON TABLE public.price TO mini;
+GRANT ALL ON TABLE public.price TO postgres;
 -- Index: idx_price_backup_code
 
 -- DROP INDEX IF EXISTS public.idx_price_backup_code;

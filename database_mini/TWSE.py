@@ -1,10 +1,9 @@
 import requests # type: ignore
-from bs4 import BeautifulSoup # type: ignore
 import pandas as pd # type: ignore
 import psycopg2 # type: ignore
 from psycopg2 import sql # type: ignore
 from tqdm import tqdm # type: ignore
-import yfinance as yf # type: ignore
+# import yfinance as yf # type: ignore
 from datetime import datetime
 from config import DB_HOST, DB_NAME, DB_PASS, DB_USER
 
@@ -12,7 +11,7 @@ class TWSE(object):
     def __init__(self):
         self.conn = None
         self.cursor = None    
-        self.db_init_year = 2023
+        self.db_init_year = 2019
         self.year = datetime.now().year
         self.month = datetime.now().month
         self._connection()
@@ -22,8 +21,6 @@ class TWSE(object):
             conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASS)
             self.conn = conn
             self.cursor = self.conn.cursor()
-            print("Connection Successful!")
-        print("Connection already existed")
         return None
     
     def block_trading_init(self):
@@ -59,43 +56,56 @@ class TWSE(object):
             df = df.drop_duplicates(subset=['code', 'da'])
             self.insert_df_into_db(df, table='public.block_trade')
 
-    def stock_code_init(self):
-        url_stock_list_goodinfo = "https://goodinfo.tw/tw/Lib.js/StockTW_ID_NM_List.js"
-        res = requests.get(url_stock_list_goodinfo)
-        soup = BeautifulSoup(res.text, 'lxml')
-        list_1 = soup.string.split("','")
-        list_4 = [i.split(" ")[0] for i in list_1[2].split("','")[2:]][:2179]
-        list_4[-1] = list_4[-1].split("'")[0]
-        list_4_cname = [i.split(" ")[0] for i in list_1[3].split("','")[2:]][:2179]
-        list_4_cname[-1] = list_4_cname[-1].split("'")[0]
+    # def stock_code_init(self):
+    #     url_stock_list_goodinfo = "https://goodinfo.tw/tw/Lib.js/StockTW_ID_NM_List.js"
+    #     res = requests.get(url_stock_list_goodinfo)
+    #     soup = BeautifulSoup(res.text, 'lxml')
+    #     list_1 = soup.string.split("','")
+    #     list_4 = [i.split(" ")[0] for i in list_1[2].split("','")[2:]][:2179]
+    #     list_4[-1] = list_4[-1].split("'")[0]
+    #     list_4_cname = [i.split(" ")[0] for i in list_1[3].split("','")[2:]][:2179]
+    #     list_4_cname[-1] = list_4_cname[-1].split("'")[0]
 
-        list_listed = []
-        for ticker in tqdm(list_4):
-            df = yf.download(f"{ticker}.TW", start='2024-08-01', progress=False)
-            if len(df) != 0:
-                list_listed.append("TW")
-            else:
-                df = yf.download(f"{ticker}.TWO", start='2024-08-01', progress=False)
-                if len(df) != 0:
-                    list_listed.append("TWO")
-                else:
-                    list_listed.append("None")
-        df = pd.DataFrame({
-            "code": list_4,
-            "cname": list_4_cname,
-            "listed": list_listed
-        })
-        self.insert_df_into_db(df, table='public.maincode')
+    #     list_listed = []
+    #     for ticker in tqdm(list_4):
+    #         df = yf.download(f"{ticker}.TW", start='2024-08-01', progress=False)
+    #         if len(df) != 0:
+    #             list_listed.append("TW")
+    #         else:
+    #             df = yf.download(f"{ticker}.TWO", start='2024-08-01', progress=False)
+    #             if len(df) != 0:
+    #                 list_listed.append("TWO")
+    #             else:
+    #                 list_listed.append("None")
+    #     df = pd.DataFrame({
+    #         "code": list_4,
+    #         "cname": list_4_cname,
+    #         "listed": list_listed
+    #     })
+    #     self.insert_df_into_db(df, table='public.maincode')
 
     def stock_code_init_tw(self):
         '''
         https://www.twse.com.tw/zh/trading/historical/bwibbu-day.html   
         https://www.twse.com.tw/rwd/zh/afterTrading/BWIBBU_d?date=20240809&selectType=ALL&response=json
         '''
-        pass
 
+        uri = "https://www.twse.com.tw/rwd/zh/afterTrading/BWIBBU_d?date=20240809&selectType=ALL&response=json"
+        res = requests.get(uri)
+        data = res.json()['data']
+        code = [i[0] for i in data]
+        cname = [i[1] for i in data]
+        listed = ["TW"] * len(code)
+        df = pd.DataFrame({
+            "code": code,
+            "cname": cname,
+            "listed": listed
+        })
+        self.insert_df_into_db(df, table='public.maincode')
+        return None
+    
     def stock_price_init(self, current, start):
-        self.cursor.execute(sql.SQL("Select code from public.maincode where listed = 'TW';"))
+        self.cursor.execute(sql.SQL("Select distinct code from public.maincode where listed = 'TW';"))
         self.conn.commit()
         res = self.cursor.fetchall()
         stock_list = [i[0] for i in res]
@@ -318,16 +328,18 @@ class TWSE(object):
             '''
         self.cursor.execute(create_query)
         self.conn.commit()
+        print(db, "init success")
     def stock_pe_init(self):
         pass
 if __name__ == "__main__":
     obj = TWSE()
     # obj.create_table_if_not_exist(db='signal')
-    # obj.create_table_if_not_exist(db='block_trade')
     # obj.create_table_if_not_exist(db='stock_code')
-    # obj.stock_code_init()
-    # obj.block_trading_init()
-    
     # obj.create_table_if_not_exist(db='stock_price')
-    ### obj.stock_price_init(current=obj.year, start=obj.db_init_year)
+    # obj.block_trading_init()
+    # obj.stock_code_init()
+    # obj.create_table_if_not_exist(db='block_trade')
     # obj.stock_price_init(current=2023, start=2020)
+
+    obj.stock_code_init_tw()
+    obj.stock_price_init(current=obj.year, start=obj.db_init_year)

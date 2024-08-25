@@ -23,7 +23,6 @@ class INDEX(object):
             conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASS)
             self.conn = conn
             self.cursor = self.conn.cursor()
-            print("Connection Successful!")
         print("Connection already existed")
         return None
     def twse_init(self):
