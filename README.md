@@ -5,12 +5,19 @@ python3 -m pip install requirements.txt
 python3 -m pip install requirements-ML.txt
 ```
 
-## Database Initialization
+## Database Initialization/Update
 ```sh
-cd db_py/
-python3 DatabaseCreation.py
+cd database_mini/
+sh db_init_mac.sh
+sh daily_update.sh
 ```
-Including Selenium initilization, database creation classification by website.
+
+## Scraping
+```sh
+cd database_mini/db_py
+python3 Selenium.py
+```
+Selenium initilization for mac
 
 ## Factor Analysis
 1. ARMA_research.ipynb
