@@ -1,13 +1,10 @@
 
 import requests
-from bs4 import BeautifulSoup
 import pandas as pd
 import psycopg2
 from psycopg2 import sql
-from tqdm import tqdm
-import json
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from config import DB_HOST, DB_NAME, DB_PASS, DB_USER
 import warnings
 warnings.filterwarnings("ignore")
