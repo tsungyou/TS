@@ -184,9 +184,9 @@ class SIGNAL(object):
             TABLESPACE pg_default;
 
             ALTER TABLE IF EXISTS public.block_code3_deatil
-                OWNER to mini;
+                OWNER to postgres;
 
-            GRANT ALL ON TABLE public.block_code3_deatil TO mini;
+            GRANT ALL ON TABLE public.block_code3_deatil TO postgres;
             '''
         self.cursor.execute(create_query)
         self.conn.commit()

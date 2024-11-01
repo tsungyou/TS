@@ -9,7 +9,8 @@ import json
 import time
 from datetime import datetime, timedelta
 from config import DB_HOST, DB_NAME, DB_PASS, DB_USER
-
+import warnings
+warnings.filterwarnings("ignore")
 class INDEX(object):
     def __init__(self):
         self.conn = None
@@ -40,11 +41,14 @@ class INDEX(object):
         newest_mo = da_newest.month
         current_mo = self.month
         for mo in range(current_mo - newest_mo + 1):
-            month = f"0{current_mo}" if current_mo < 10 else current_mo
-            url_twse = f"https://www.twse.com.tw/rwd/zh/TAIEX/MI_5MINS_HIST?date={self.year}{month}01&response=json"
-            res = requests.get(url_twse)
-            js = res.json()
-            list_.append(js['data'])
+            try:
+                month = f"0{current_mo}" if current_mo < 10 else current_mo
+                url_twse = f"https://www.twse.com.tw/rwd/zh/TAIEX/MI_5MINS_HIST?date={self.year}{month}01&response=json"
+                res = requests.get(url_twse)
+                js = res.json()
+                list_.append(js['data'])
+            except:
+                print(js)
             current_mo += 1
         list_list = sum(list_, [])
         df = pd.DataFrame(list_list, columns=['da', 'op', 'hi', 'lo', 'cl'])
