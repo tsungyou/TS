@@ -1,3 +1,11 @@
+## Strategies
+1. MT5/JP225_Range_Breakout.mq5
+2. MT5/JP225_RSI.mq5
+3. MT5/JP225_RSI.mq5
+4. MT5/Mean_reversion_USShares.mq5
+5. Strategies/Turbulence.ipynb
+6. Strategies/TWSE_f.ipynb
+
 ## Installation
 
 ```bash
@@ -20,6 +28,7 @@ python3 Selenium.py
 Selenium initilization for mac
 
 ## Factor Analysis
-1. ARMA_research.ipynb
-2. ARIMA_GARCH_research.ipynb
-3. ARMA_on_PE.ipynb
+Factor Includes:
+    1. ARIMA
+    2. GARCH
+    3. Fourier Series
